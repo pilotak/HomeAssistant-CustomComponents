@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Weather forecast delivered by your WD Clientraw enabled " \
-"weather station."
+    "weather station."
 
 SENSOR_TYPES = {
     'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
@@ -56,6 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1, max=59)),
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
@@ -73,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     weather = ClientrawData(hass, url, dev)
     # Update weather per interval
     async_track_time_interval(hass, weather.async_update,
-                                timedelta(minutes=interval, seconds=0))
+                              timedelta(minutes=interval, seconds=0))
     yield from weather.async_update()
 
 
@@ -115,6 +116,7 @@ class ClientrawSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+
 class ClientrawData(object):
     """Get the latest data and updates the states."""
 
@@ -133,7 +135,8 @@ class ClientrawData(object):
             _LOGGER.warning('Fetching url failed, retrying in 5 min: %s', err)
             nxt = dt_util.utcnow() + timedelta(minutes=5)
             if nxt.minute >= 5:
-                async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+                async_track_point_in_utc_time(
+                    self.hass, self.async_update, nxt)
 
         resp = None
         try:
@@ -144,8 +147,6 @@ class ClientrawData(object):
                 try_again('{} returned {}'.format(resp.url, resp.status))
                 return
             text = yield from resp.text()
-
-
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             try_again(err)
@@ -158,8 +159,8 @@ class ClientrawData(object):
         try:
             self.data = text.split(' ')
 
-            if len(self.data) < 115 :
-            	raise ValueError('Could not parse the file')
+            if len(self.data) < 115:
+                raise ValueError('Could not parse the file')
         except (ExpatError, IndexError) as err:
             try_again(err)
             return
@@ -183,7 +184,7 @@ class ClientrawData(object):
 
             elif dev.type == 'temp_f':
                 celsius = float(self.data[4])
-                new_state = round(9.0/5.0 * celsius + 32, 2)
+                new_state = round(9.0 / 5.0 * celsius + 32, 2)
 
             elif dev.type == 'wind_kph':
                 knots = float(self.data[1])
@@ -211,8 +212,9 @@ class ClientrawData(object):
 
             elif dev.type == 'wind_dir':
                 direction = float(self.data[3])
-                val = int((direction/22.5)+.5)
-                arr=["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
+                val = int((direction / 22.5) + .5)
+                arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                       "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
                 new_state = arr[(val % 16)]
 
             elif dev.type == 'humidity':
@@ -230,21 +232,21 @@ class ClientrawData(object):
 
             elif dev.type == 'dewpoint_f':
                 celsius = float(self.data[72])
-                new_state = round(9.0/5.0 * celsius + 32, 2)
+                new_state = round(9.0 / 5.0 * celsius + 32, 2)
 
             elif dev.type == 'heat_index_c':
                 new_state = float(self.data[112])
 
             elif dev.type == 'heat_index_f':
                 celsius = float(self.data[112])
-                new_state = round(9.0/5.0 * celsius + 32, 2)
+                new_state = round(9.0 / 5.0 * celsius + 32, 2)
 
             elif dev.type == 'humidex_c':
                 new_state = float(self.data[44])
 
             elif dev.type == 'humidex_f':
                 celsius = float(self.data[44])
-                new_state = round(9.0/5.0 * celsius + 32, 2)
+                new_state = round(9.0 / 5.0 * celsius + 32, 2)
 
             _LOGGER.debug("%s %s", dev.type, new_state)
 

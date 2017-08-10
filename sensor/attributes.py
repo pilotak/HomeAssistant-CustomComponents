@@ -1,5 +1,5 @@
 # """
-# Allows the creation of a sensor that breaks out its defined attribute.
+# Creates a sensor that breaks out attribute of defined entities.
 # """
 import asyncio
 import logging
@@ -10,8 +10,7 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_ICON, CONF_ENTITIES, CONF_SENSORS,
-    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN)
+    ATTR_ICON, CONF_ENTITIES, EVENT_HOMEASSISTANT_START, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -35,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-# pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the attributes sensors."""
     _LOGGER.info("Starting attribute sensor")
@@ -45,20 +43,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         attr = config.get(CONF_ATTRIBUTE)
         time_format = str(config.get(CONF_TIME_FORMAT))
 
-        if (attr == "last_triggered" or attr == "last_changed") and time_format:
+        if (attr == "last_triggered" or
+                attr == "last_changed") and time_format:
+
             state_template = ("{{% if states('{0}') %}}\
-            {{{{ as_timestamp(states.{0}.attributes['{1}'])\
-            | int | timestamp_local() | timestamp_custom('{2}') }}}}\
-            {{% else %}} {3} {{% endif %}}").format(device, attr,
-                time_format, STATE_UNKNOWN)
-        elif attr == "battery" or attr =="battery_level":
+                              {{{{ as_timestamp(states.{0}.attributes['{1}'])\
+                              | int | timestamp_local()\
+                              | timestamp_custom('{2}') }}}}\
+                              {{% else %}} {3} {{% endif %}}").format(
+                device, attr, time_format, STATE_UNKNOWN)
+        elif attr == "battery" or attr == "battery_level":
             state_template = ("{{% if states('{0}') %}}\
-            {{{{ states.{0}.attributes['{1}'] | float }}}}\
-            {{% else %}} {2} {{% endif %}}").format(device, attr, STATE_UNKNOWN)
+                              {{{{ states.{0}.attributes['{1}'] | float }}}}\
+                              {{% else %}} {2} {{% endif %}}").format(
+                device, attr, STATE_UNKNOWN)
         else:
             state_template = ("{{% if states('{0}') %}}\
-            {{{{ states.{0}.attributes['{1}'] }}}}\
-            {{% else %}} {2} {{% endif %}}").format(device, attr, STATE_UNKNOWN)
+                              {{{{ states.{0}.attributes['{1}'] }}}}\
+                              {{% else %}} {2} {{% endif %}}").format(
+                device, attr, STATE_UNKNOWN)
 
         _LOGGER.info("Adding attribute: of entity: %s", attr, device)
         _LOGGER.debug("Applying template: %s", state_template)
@@ -68,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         icon = str(config.get(ATTR_ICON))
 
-        friendly_name = config.get(ATTR_FRIENDLY_NAME, device.split(".",1)[1])
+        friendly_name = config.get(ATTR_FRIENDLY_NAME, device.split(".", 1)[1])
         unit_of_measurement = config.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if icon.startswith('mdi:'):
@@ -78,7 +81,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
             new_icon = template_helper.Template(new_icon)
             new_icon.hass = hass
-        elif attr == "battery" or attr =="battery_level":
+        elif attr == "battery" or attr == "battery_level":
             _LOGGER.debug("Applying battery icon template")
 
             new_icon = ("{{% if states('{0}') %}}\
@@ -120,13 +123,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         sensors.append(
             AttributeSensor(
                 hass,
-                ("{0}_{1}").format(device.split(".",1)[1], attr),
+                ("{0}_{1}").format(device.split(".", 1)[1], attr),
                 friendly_name,
                 unit_of_measurement,
                 state_template,
                 new_icon,
                 device)
-            )
+        )
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
@@ -214,7 +217,7 @@ class AttributeSensor(Entity):
                 return
             self._state = None
             _LOGGER.error('Could not attribute sensor for %s: %s',
-                self._entity, ex)
+                          self._entity, ex)
 
         if self._icon_template is not None:
             try:
