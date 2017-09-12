@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                               {{% else %}} {2} {{% endif %}}").format(
                 device, attr, STATE_UNKNOWN)
 
-        _LOGGER.info("Adding attribute: of entity: %s", attr, device)
+        _LOGGER.info("Adding attribute: %s of entity: %s", attr, device)
         _LOGGER.debug("Applying template: %s", state_template)
 
         state_template = template_helper.Template(state_template)
@@ -71,7 +71,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         icon = str(config.get(ATTR_ICON))
 
-        friendly_name = config.get(ATTR_FRIENDLY_NAME, device.split(".", 1)[1])
+        device_state = hass.states.get(device)
+        if device_state is not None:
+            device_friendly_name = device_state.attributes.get('friendly_name')
+        else:
+            device_friendly_name = None
+
+        if device_friendly_name is None:
+            device_friendly_name = device.split(".", 1)[1]
+        
+        friendly_name = config.get(ATTR_FRIENDLY_NAME, device_friendly_name)
         unit_of_measurement = config.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if icon.startswith('mdi:'):
@@ -205,7 +214,17 @@ class AttributeSensor(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        """Update the state from the template."""
+        """Update the state from the template and the friendly name."""
+
+        entity_state = self.hass.states.get(self._entity)
+        if entity_state is not None:
+            device_friendly_name = entity_state.attributes.get('friendly_name')
+        else:
+            device_friendly_name = None
+
+        if device_friendly_name is not None:
+            self._name = device_friendly_name
+
         try:
             self._state = self._template.async_render()
         except TemplateError as ex:
