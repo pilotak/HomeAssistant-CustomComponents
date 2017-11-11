@@ -46,19 +46,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if (attr == "last_triggered" or
                 attr == "last_changed") and time_format:
 
-            state_template = ("{{% if states('{0}') %}}\
+            state_template = ("{{% if states('{0}') != '{2}' %}}\
                               {{{{ as_timestamp(states.{0}.attributes['{1}'])\
                               | int | timestamp_local()\
                               | timestamp_custom('{2}') }}}}\
                               {{% else %}} {3} {{% endif %}}").format(
                 device, attr, time_format, STATE_UNKNOWN)
         elif attr == "battery" or attr == "battery_level":
-            state_template = ("{{% if states('{0}') %}}\
+            state_template = ("{{% if states('{0}') != '{2}' %}}\
                               {{{{ states.{0}.attributes['{1}'] | float }}}}\
                               {{% else %}} {2} {{% endif %}}").format(
                 device, attr, STATE_UNKNOWN)
         else:
-            state_template = ("{{% if states('{0}') %}}\
+            state_template = ("{{% if states('{0}') != '{2}' %}}\
                               {{{{ states.{0}.attributes['{1}'] }}}}\
                               {{% else %}} {2} {{% endif %}}").format(
                 device, attr, STATE_UNKNOWN)
@@ -79,21 +79,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         if device_friendly_name is None:
             device_friendly_name = device.split(".", 1)[1]
-        
+
         friendly_name = config.get(ATTR_FRIENDLY_NAME, device_friendly_name)
         unit_of_measurement = config.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if icon.startswith('mdi:'):
             _LOGGER.debug("Applying user defined icon: '%s'", icon)
-            new_icon = ("{{% if states('{0}') %}} {1} {{% else %}}\
-                mdi:eye {{% endif %}}").format(device, icon)
+            new_icon = ("{{% if states('{0}') != '{2}' %}} {1} {{% else %}}\
+                mdi:eye {{% endif %}}").format(device, icon, STATE_UNKNOWN)
 
             new_icon = template_helper.Template(new_icon)
             new_icon.hass = hass
         elif attr == "battery" or attr == "battery_level":
             _LOGGER.debug("Applying battery icon template")
 
-            new_icon = ("{{% if states('{0}') %}}\
+            new_icon = ("{{% if states('{0}') != '{2}' %}}\
                 {{% set batt = states.{0}.attributes['{1}'] %}}\
                 {{% if batt == 'unknown' %}}\
                 mdi:battery-unknown\
@@ -122,7 +122,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 {{% endif %}}\
             {{% else %}}\
             mdi:battery-unknown\
-            {{% endif %}}").format(device, attr)
+            {{% endif %}}").format(device, attr, STATE_UNKNOWN)
             new_icon = template_helper.Template(str(new_icon))
             new_icon.hass = hass
         else:
