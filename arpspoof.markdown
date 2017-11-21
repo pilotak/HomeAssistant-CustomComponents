@@ -33,13 +33,15 @@ $ sudo apt-get install tcpdump
 $ sudo pip3 install scapy-python3
 ```
 
-We then we grant priviliges to run `scapy` as non-root.
+We then we grant privileges to run `scapy` as non-root.
 ```bash
 $ sudo groupadd arp
 $ sudo usermod -a -G arp homeassistant
 $ newgrp homeassistant
 $ sudo chgrp arp $(eval readlink -f `which python3`)
+sudo chgrp arp $(eval readlink -f `which tcpdump`)
 $ sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
+$ sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which tcpdump`)
 ```
 
 #### {% linkable_title Symlinking into virtual environment %}
