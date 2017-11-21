@@ -34,7 +34,7 @@ def setup(hass, config):
     def loop(event_time):
         hass.data[DOMAIN].loop()
 
-    track_time_interval(hass, loop, timedelta(seconds=10))
+    track_time_interval(hass, loop, timedelta(seconds=2))
 
     return True
 
@@ -53,14 +53,16 @@ class ArpSpoof(object):
                       self._router_ip,
                       self._router_mac)
 
-    def MACsnag(self, victimIP):
+    def mac_snag(self, victimIP):
         try:
-            ans = arping(victimIP, iface=self._interface, verbose=False)[0]
-            if not ans:
-                return None
+            ans, unans = arping(
+                victimIP + "/24", iface=self._interface, verbose=False)
 
-            for s, r in ans:
-                return r[Ether].src
+            if ans:
+                for s, r in ans:
+                    return r[Ether].src
+            else:
+                return None
 
         except:
             _LOGGER.error("Error when trying to get MAC of %s", victimIP)
@@ -89,34 +91,33 @@ class ArpSpoof(object):
 
         try:
             send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
-                     hwdst=victimMAC))
+                     hwdst=victimMAC), iface=self._interface, verbose=False)
             send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
-                     hwdst=self._router_mac))
+                     hwdst=self._router_mac), iface=self._interface, verbose=False)
         except:
             _LOGGER.error("Error when trying to spoof IP: %s",
                           self._devices[0][i])
 
     def restore(self, victimIP, victimMAC):
         _LOGGER.info("Enabling internet for device IP: %s MAC: %s",
-                     ip, self._devices[1][index])
+                     victimIP, victimMAC)
 
         try:
             self._devices[0].remove(victimIP)
             self._devices[1].remove(victimMAC)
 
-            send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
-                     hwdst="ff:ff:ff:ff:ff:ff", hwsrc=victimMAC), count=4)
-            send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
-            hwdst="ff:ff:ff:ff:ff:ff", hwsrc=self._router_mac), count=4)
+            send(ARP(op=2, pdst=victimIP, hwdst=victimMAC, psrc=self._router_ip,
+                     hwsrc=self._router_mac), count=4, iface=self._interface, verbose=False)
+            send(ARP(op=2, pdst=self._router_ip, hwdst=self._router_mac, psrc=victimIP,
+                     hwsrc=victimMAC), count=4, iface=self._interface, verbose=False)
         except:
-            _LOGGER.error("Error when restoring IP: %s",
-                          self._devices[0][i])
+            _LOGGER.error("Error when restoring IP: %s", victimIP)
 
     def add_device(self, ip):
         _LOGGER.debug("Trying to disable internet for device IP: %s", ip)
 
         if ip not in self._devices[0]:
-            mac = self.MACsnag(ip)
+            mac = self.mac_snag(ip)
 
             if mac is not None:
                 _LOGGER.info("Adding device IP: %s MAC: %s", ip, mac)
@@ -124,7 +125,7 @@ class ArpSpoof(object):
                 self._devices[0].append(ip)
                 self._devices[1].append(mac)
 
-                _LOGGER.debug("Device IP array now: %s", self._devices[0])
+                # _LOGGER.debug("Device IP array now: %s", self._devices[0])
 
                 return True
 
@@ -145,13 +146,21 @@ class ArpSpoof(object):
 
             self.restore(ip, self._devices[1][index])
 
-            _LOGGER.debug("Device IP array now: %s", self._devices[0])
+            # _LOGGER.debug("Device IP array now: %s", self._devices[0])
 
             return False
         else:
             _LOGGER.warning("Device IP: %s is not on list", ip)
 
         return True
+
+    def enable_packet_forwarding():
+        with open(IP_FORWARD, 'w') as fd:
+            fd.write('1')
+
+    def disable_packet_forwarding():
+        with open(IP_FORWARD, 'w') as fd:
+            fd.write('0')
 
     def loop(self):
         for i in range(len(self._devices[0])):
