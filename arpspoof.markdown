@@ -85,7 +85,7 @@ This will show all interfaces available it can be ie. `eth0` or `wlan0` or `enx*
 
 ## {% linkable_title Configuration example %}
 
-In the following example, a Pi B+ running Home Assistant is connected to local network by Ethernet cable through `eth0` interface. All you need to know is the IP address of the device you want to disable internet (ie. child).
+In the following example, a Pi B+ running Home Assistant is connected to local network by Ethernet cable through `eth0` interface. All you need to know is the IP address or MAC of the device you want to disable internet (ie. child).
 
 ```yaml
 # optional
@@ -102,7 +102,11 @@ switch:
     devices:
       test:
         friendly_name: my name
-        ip_address: 192.168.1.105
+        address: 192.168.1.105
+        icon: 'mdi:laptop'
+      test2:
+        friendly_name: my other name
+        address: 'AB:CD:EF:12:34:56'
         icon: 'mdi:laptop'
 ```
 
