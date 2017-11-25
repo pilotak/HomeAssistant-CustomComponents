@@ -8,7 +8,7 @@ from datetime import timedelta
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_SCAN_INTERVAL)
 
-from scapy.all import conf, send, ARP, arping, get_if_hwaddr
+from scapy.all import conf, send, ARP, arping, get_if_hwaddr, Ether
 
 DOMAIN = "arpspoof"
 
