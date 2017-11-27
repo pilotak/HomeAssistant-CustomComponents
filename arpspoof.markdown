@@ -12,12 +12,12 @@ logo:
 ha_release: ---
 ha_iot_class: "Local Push"
 ---
-#WORK IN PROGRESS
 
 The `arpspoof` component provides services that allow disabling specified devices internet in your network. Useful to control how much time the children spend on the internet.
 
 ## {% linkable_title Arpspoof Setup %}
 
+**Python 3.5 or higher is required**
 *  Login to Raspberry Pi 
 
 ```bash
@@ -39,7 +39,7 @@ $ sudo groupadd arp
 $ sudo usermod -a -G arp homeassistant
 $ newgrp homeassistant
 $ sudo chgrp arp $(eval readlink -f `which python3`)
-sudo chgrp arp $(eval readlink -f `which tcpdump`)
+$ sudo chgrp arp $(eval readlink -f `which tcpdump`)
 $ sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
 $ sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which tcpdump`)
 ```

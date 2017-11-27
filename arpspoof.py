@@ -37,6 +37,9 @@ def setup(hass, config):
     interface = conf.get(CONF_INTERFACE)
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
+    if not scan_interval:
+        scan_interval = 30
+
     hass.data[DOMAIN] = ArpSpoof(hass, interface)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[
@@ -85,8 +88,8 @@ class ArpSpoof(object):
                     self._arp_cache.append([r[ARP].psrc, r[Ether].src.lower()])
 
             _LOGGER.debug("ARP cache: %s", self._arp_cache)
-        except:
-            _LOGGER.error("Error when trying update ARP cache")
+        except Exception as e:
+            _LOGGER.error("Error when trying update ARP cache: %s", str(e))
 
     def get_mac(self, victimIP):
         try:
