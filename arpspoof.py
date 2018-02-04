@@ -138,13 +138,16 @@ class ArpSpoof(object):
             victimIP = self._devices[index][0]
             victimMAC = self._devices[index][1]
 
-            send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
-                     hwdst=victimMAC), iface=self._interface, verbose=False)
-            send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
-                     hwdst=self._router_mac), iface=self._interface, verbose=False)
-        except:
-            _LOGGER.error("Error when trying to spoof device IP: %s MAC: %s",
-                     victimIP, victimMAC)
+            try:
+                send(ARP(op=2, pdst=victimIP, psrc=self._router_ip,
+                         hwdst=victimMAC), iface=self._interface, verbose=False)
+                send(ARP(op=2, pdst=self._router_ip, psrc=victimIP,
+                         hwdst=self._router_mac), iface=self._interface, verbose=False)
+            except:
+                _LOGGER.error("Error when trying to spoof device IP: %s MAC: %s",
+                              victimIP, victimMAC)
+        except IndexError:
+            _LOGGER.error("Error when trying to spoof device index: %s", index)
 
     def restore(self, index):
         try:
@@ -162,7 +165,7 @@ class ArpSpoof(object):
                      hwsrc=victimMAC), count=4, iface=self._interface, verbose=False)
 
         except:
-            _LOGGER.error("Error when restoring IP: %s", victimIP)
+            _LOGGER.error("Error when restoring device index: %s", index)
 
     def add_device(self, address, address_type):
         _LOGGER.debug(

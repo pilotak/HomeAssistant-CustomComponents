@@ -38,10 +38,10 @@ We then we grant privileges to run `scapy` as non-root.
 $ sudo groupadd arp
 $ sudo usermod -a -G arp homeassistant
 $ newgrp homeassistant
-$ sudo chgrp arp $(eval readlink -f `which python3`)
-$ sudo chgrp arp $(eval readlink -f `which tcpdump`)
-$ sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
-$ sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which tcpdump`)
+$ sudo chgrp arp /usr/bin/python3.5
+$ sudo chgrp arp /usr/sbin/tcpdump
+$ sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/python3.5
+$ sudo setcap cap_net_raw,cap_net_admin+eip /usr/sbin/tcpdump
 ```
 
 #### {% linkable_title Symlinking into virtual environment %}

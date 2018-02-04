@@ -1,0 +1,7 @@
+run_script:
+  description: Run script on RouterBoard
+
+  fields:
+    name:
+      description: Name of the saved script
+      example: "MySavedScript"
