@@ -62,7 +62,7 @@ sensor:
       - wind_kph
       - wind_mph
       - symbol
-      - rain_rate
+      - daily_rain
       - pressure
       - humidity
       - cloud_height_m
