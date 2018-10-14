@@ -8,7 +8,7 @@ sensor:
   - platform: clientraw
     url: "http://example.com/clientraw.txt"
     monitored_conditions:
-      - temp_c
+      - temp
       - humidity
 ```
 
@@ -18,10 +18,10 @@ Configuration variables:
 - **interval**: poll interval in minutes (1-59), 15 min is default
 - **name**: optional string with the name of the station (if not set --> 'clientraw')
 - **monitored_conditions** array: Conditions to display in the frontend.
-  - **dewpoint_c**: Dewpoint (°C)
-  - **heat_index_c**: Heat index (°C)
-  - **temp_c**: Temperature (°C)
-  - **humidex_c**: Humidex (°C)
+  - **dewpoint**: Dewpoint (°C)
+  - **heat_index**: Heat index (°C)
+  - **temp**: Temperature (°C)
+  - **humidex**: Humidex (°C)
   - **wind_degrees**: Where the wind is coming from in degrees, with true north at 0° and progressing clockwise.
   - **wind_dir**: Wind Direction as string ie.: N, NW, etc.
   - **wind_gust_kph**: Wind Gust (km/h)
@@ -46,10 +46,10 @@ sensor:
     interval: 10
     name: 'station1'
     monitored_conditions:
-      - dewpoint_c
-      - heat_index_c
-      - temp_c
-      - humidex_c
+      - dewpoint
+      - heat_index
+      - temp
+      - humidex
       - wind_degrees
       - wind_dir
       - wind_gust_kph
