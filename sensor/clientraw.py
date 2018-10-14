@@ -23,10 +23,10 @@ CONF_ATTRIBUTION = "Weather forecast delivered by your WD Clientraw enabled " \
     "weather station."
 
 SENSOR_TYPES = {
-    'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
-    'heat_index_c': ['Heat index (°C)', TEMP_CELSIUS],
-    'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
-    'humidex_c': ['Humidex (°C)', TEMP_CELSIUS],
+    'dewpoint': ['Dewpoint (°C)', TEMP_CELSIUS],
+    'heat_index': ['Heat index (°C)', TEMP_CELSIUS],
+    'temp': ['Temperature (°C)', TEMP_CELSIUS],
+    'humidex': ['Humidex (°C)', TEMP_CELSIUS],
     'wind_degrees': ['Wind Degrees', '°'],
     'wind_dir': ['Wind Direction', None],
     'wind_gust_kph': ['Wind Gust (km/h)', 'km/h'],
@@ -183,7 +183,7 @@ class ClientrawData(object):
             elif dev.type == 'rain_rate':
                 new_state = float(self.data[10])
 
-            elif dev.type == 'temp_c':
+            elif dev.type == 'temp':
                 new_state = float(self.data[4])
 
             elif dev.type == 'wind_kph':
@@ -227,13 +227,13 @@ class ClientrawData(object):
                 meters = float(self.data[73])
                 new_state = round(meters / 0.3048, 2)
 
-            elif dev.type == 'dewpoint_c':
+            elif dev.type == 'dewpoint':
                 new_state = float(self.data[72])
 
-            elif dev.type == 'heat_index_c':
+            elif dev.type == 'heat_index':
                 new_state = float(self.data[112])
 
-            elif dev.type == 'humidex_c':
+            elif dev.type == 'humidex':
                 new_state = float(self.data[44])
 
             _LOGGER.debug("%s %s", dev.type, new_state)
