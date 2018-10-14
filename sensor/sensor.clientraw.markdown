@@ -16,6 +16,7 @@ Configuration variables:
 
 - **url**: full path to clientraw.txt file
 - **interval**: poll interval in minutes (1-59), 15 min is default
+- **name**: optional string with the name of the station (if not set --> 'clientraw')
 - **monitored_conditions** array: Conditions to display in the frontend.
   - **dewpoint_c**: Dewpoint (°C)'
   - **dewpoint_f**: Dewpoint (°F)
@@ -46,6 +47,7 @@ sensor:
   - platform: clientraw
     url: "http://example.com/clientraw.txt"
     interval: 10
+    name: 'station1'
     monitored_conditions:
       - dewpoint_c
       - dewpoint_f
