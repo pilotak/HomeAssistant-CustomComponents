@@ -47,11 +47,14 @@ SENSOR_TYPES = {
 
 CONF_URL = 'url'
 CONF_INTERVAL = 'interval'
+CONF_NAME = 'name'
+DEFAULT_NAME = 'clientraw'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES.keys())]),
     vol.Required(CONF_URL, default=[]): cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_INTERVAL, default=15):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=59)),
 })
@@ -63,12 +66,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     url = config.get(CONF_URL)
     interval = config.get(CONF_INTERVAL)
-
+    name = config.get(CONF_NAME)
+    
     _LOGGER.debug("Clientraw setup interval %s", interval)
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(ClientrawSensor(sensor_type))
+        dev.append(ClientrawSensor(sensor_type, name))
     async_add_devices(dev)
 
     weather = ClientrawData(hass, url, dev)
@@ -81,9 +85,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class ClientrawSensor(Entity):
     """Representation of an clientraw sensor."""
 
-    def __init__(self, sensor_type):
+    def __init__(self, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = 'clientraw'
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
