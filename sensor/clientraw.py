@@ -23,14 +23,10 @@ CONF_ATTRIBUTION = "Weather forecast delivered by your WD Clientraw enabled " \
     "weather station."
 
 SENSOR_TYPES = {
-    'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
-    'dewpoint_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
-    'heat_index_c': ['Heat index (°C)', TEMP_CELSIUS],
-    'heat_index_f': ['Heat index (°F)', TEMP_FAHRENHEIT],
-    'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
-    'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
-    'humidex_c': ['Humidex (°C)', TEMP_CELSIUS],
-    'humidex_f': ['Humidex (°F)', TEMP_FAHRENHEIT],
+    'dewpoint': ['Dewpoint (°C)', TEMP_CELSIUS],
+    'heat_index': ['Heat index (°C)', TEMP_CELSIUS],
+    'temp': ['Temperature (°C)', TEMP_CELSIUS],
+    'humidex': ['Humidex (°C)', TEMP_CELSIUS],
     'wind_degrees': ['Wind Degrees', '°'],
     'wind_dir': ['Wind Direction', None],
     'wind_gust_kph': ['Wind Gust (km/h)', 'km/h'],
@@ -39,6 +35,7 @@ SENSOR_TYPES = {
     'wind_mph': ['Wind Speed (mph)', 'mph'],
     'symbol': ['Symbol', None],
     'daily_rain': ['Daily Rain', 'mm'],
+    'rain_rate': ['Rain Rate', 'mm'],
     'pressure': ['Pressure', 'hPa'],
     'humidity': ['Humidity', '%'],
     'cloud_height_m': ['Cloud Height (m)', 'm'],
@@ -183,12 +180,11 @@ class ClientrawData(object):
             elif dev.type == 'daily_rain':
                 new_state = float(self.data[7])
 
-            elif dev.type == 'temp_c':
-                new_state = float(self.data[4])
+            elif dev.type == 'rain_rate':
+                new_state = float(self.data[10])
 
-            elif dev.type == 'temp_f':
-                celsius = float(self.data[4])
-                new_state = round(9.0 / 5.0 * celsius + 32, 2)
+            elif dev.type == 'temp':
+                new_state = float(self.data[4])
 
             elif dev.type == 'wind_kph':
                 knots = float(self.data[1])
@@ -231,26 +227,14 @@ class ClientrawData(object):
                 meters = float(self.data[73])
                 new_state = round(meters / 0.3048, 2)
 
-            elif dev.type == 'dewpoint_c':
+            elif dev.type == 'dewpoint':
                 new_state = float(self.data[72])
 
-            elif dev.type == 'dewpoint_f':
-                celsius = float(self.data[72])
-                new_state = round(9.0 / 5.0 * celsius + 32, 2)
-
-            elif dev.type == 'heat_index_c':
+            elif dev.type == 'heat_index':
                 new_state = float(self.data[112])
 
-            elif dev.type == 'heat_index_f':
-                celsius = float(self.data[112])
-                new_state = round(9.0 / 5.0 * celsius + 32, 2)
-
-            elif dev.type == 'humidex_c':
+            elif dev.type == 'humidex':
                 new_state = float(self.data[44])
-
-            elif dev.type == 'humidex_f':
-                celsius = float(self.data[44])
-                new_state = round(9.0 / 5.0 * celsius + 32, 2)
 
             _LOGGER.debug("%s %s", dev.type, new_state)
 

@@ -8,7 +8,7 @@ sensor:
   - platform: clientraw
     url: "http://example.com/clientraw.txt"
     monitored_conditions:
-      - temp_c
+      - temp
       - humidity
 ```
 
@@ -18,14 +18,10 @@ Configuration variables:
 - **interval**: poll interval in minutes (1-59), 15 min is default
 - **name**: optional string with the name of the station (if not set --> 'clientraw')
 - **monitored_conditions** array: Conditions to display in the frontend.
-  - **dewpoint_c**: Dewpoint (°C)'
-  - **dewpoint_f**: Dewpoint (°F)
-  - **heat_index_c**: Heat index (°C)
-  - **heat_index_f**: Heat index (°F)
-  - **temp_c**: Temperature (°C)
-  - **temp_f**: Temperature (°F)
-  - **humidex_c**: Humidex (°C)
-  - **humidex_f**: Humidex (°F)
+  - **dewpoint**: Dewpoint (°C)
+  - **heat_index**: Heat index (°C)
+  - **temp**: Temperature (°C)
+  - **humidex**: Humidex (°C)
   - **wind_degrees**: Where the wind is coming from in degrees, with true north at 0° and progressing clockwise.
   - **wind_dir**: Wind Direction as string ie.: N, NW, etc.
   - **wind_gust_kph**: Wind Gust (km/h)
@@ -34,6 +30,7 @@ Configuration variables:
   - **wind_mph**: Wind Speed (mph)
   - **symbol**: Symbol
   - **daily_rain**: Daily Rain (mm)
+  - **rain_rate**: Rain Rate (mm)
   - **pressure**: Pressure (hPa)
   - **humidity**: Relative humidity
   - **cloud_height_m**: Cloud Height (m)
@@ -49,14 +46,10 @@ sensor:
     interval: 10
     name: 'station1'
     monitored_conditions:
-      - dewpoint_c
-      - dewpoint_f
-      - heat_index_c
-      - heat_index_f
-      - temp_c
-      - temp_f
-      - humidex_c
-      - humidex_f
+      - dewpoint
+      - heat_index
+      - temp
+      - humidex
       - wind_degrees
       - wind_dir
       - wind_gust_kph
@@ -65,6 +58,7 @@ sensor:
       - wind_mph
       - symbol
       - daily_rain
+      - rain_rate
       - pressure
       - humidity
       - cloud_height_m
