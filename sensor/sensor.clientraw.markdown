@@ -44,7 +44,7 @@ sensor:
   - platform: clientraw
     url: "http://example.com/clientraw.txt"
     interval: 10
-    name: 'station1'
+    name: station1
     monitored_conditions:
       - dewpoint
       - heat_index
@@ -57,6 +57,7 @@ sensor:
       - wind_kph
       - wind_mph
       - symbol
+      - forecast
       - daily_rain
       - rain_rate
       - pressure
