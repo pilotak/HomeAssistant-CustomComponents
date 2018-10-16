@@ -13,8 +13,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_ATTRIBUTION)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_time_interval)
+from homeassistant.helpers.event import (async_track_point_in_utc_time, async_track_time_interval)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +33,7 @@ SENSOR_TYPES = {
     'wind_kph': ['Wind Speed (km/h)', 'km/h'],
     'wind_mph': ['Wind Speed (mph)', 'mph'],
     'symbol': ['Symbol', None],
+    'forecast': ['Forecast', None],
     'daily_rain': ['Daily Rain', 'mm'],
     'rain_rate': ['Rain Rate', 'mm'],
     'pressure': ['Pressure', 'hPa'],
@@ -176,6 +176,20 @@ class ClientrawData(object):
 
             if dev.type == 'symbol':
                 new_state = int(self.data[48])
+
+            elif dev.type == 'forecast':
+                val = int(self.data[15])
+                arr = ["sunny", "clearnight", "cloudy", "cloudy2", 
+                       "night cloudy", "dry", "fog", "haze", "heavyrain", 
+                       "mainlyfine", "mist", "night fog", "night heavyrain",
+                       "night overcast", "night rain", "night showers", 
+                       "night snow", "night", "thunder", "overcast", 
+                       "partlycloudy", "rain", "rain2", "showers2", "sleet", 
+                       "sleetshowers", "snow", "snowmelt", "snowshowers2", 
+                       "sunny", "thundershowers", "thundershowers2", 
+                       "thunderstorms", "tornado", "windy", "stopped", 
+                       "rainning", "wind + rain"]
+                new_state = arr[(val)]
 
             elif dev.type == 'daily_rain':
                 new_state = float(self.data[7])
