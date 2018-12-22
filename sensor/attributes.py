@@ -15,7 +15,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers import template as template_helper
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,7 +147,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
-class AttributeSensor(Entity):
+class AttributeSensor(RestoreEntity):
     """Representation of a Attribute Sensor."""
 
     def __init__(self, hass, device_id, friendly_name, unit_of_measurement,
@@ -167,7 +167,7 @@ class AttributeSensor(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = yield from self.async_get_last_state()
         if state:
             self._state = state.state
 
