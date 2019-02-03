@@ -74,9 +74,9 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     weather = ClientrawData(hass, url, interval, dev)
     # Update weather per interval
-    async_track_utc_time_change(hass, weather.fetch_data,
+    async_track_utc_time_change(hass, weather.async_update,
                                 minute=interval, second=0)
-    await weather.fetch_data()
+    await weather.async_update()
 
 
 class ClientrawSensor(Entity):
@@ -135,13 +135,13 @@ class ClientrawData(object):
         self.hass = hass
         self._interval = interval
 
-    async def fetch_data(self, *_):
+    async def async_update(self, *_):
         """Get the latest data"""
 
         def try_again(err: str):
             """Retry"""
             _LOGGER.error("Will try again shortly: %s", err)
-            async_call_later(self.hass, 2 * 60, self.fetch_data)
+            async_call_later(self.hass, 2 * 60, self.async_update)
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -164,11 +164,6 @@ class ClientrawData(object):
             try_again(err)
             return
 
-        await self.async_update()
-        async_call_later(self.hass, self._interval * 60, self.fetch_data)
-
-    async def async_update(self, *_):
-        """Find the current data from self.data."""
         if not self.data:
             return
 
@@ -263,3 +258,5 @@ class ClientrawData(object):
 
         if tasks:
             await asyncio.wait(tasks, loop=self.hass.loop)
+
+        async_call_later(self.hass, self._interval * 60, self.async_update)
