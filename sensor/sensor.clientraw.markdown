@@ -35,6 +35,7 @@ Configuration variables:
   - **humidity**: Relative humidity
   - **cloud_height_m**: Cloud Height (m)
   - **cloud_height_ft**: Cloud Height (ft)
+  - **forecast**: Text based
 
 A full configuration example can be found below:
 
@@ -63,6 +64,7 @@ sensor:
       - humidity
       - cloud_height_m
       - cloud_height_ft
+      - forecast
 ```
 Symbol codes:
 ```

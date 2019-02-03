@@ -33,13 +33,14 @@ SENSOR_TYPES = {
     'wind_gust_mph': ['Wind Gust (mph)', 'mph', 'mdi:weather-windy'],
     'wind_kph': ['Wind Speed (km/h)', 'km/h', 'mdi:weather-windy-variant'],
     'wind_mph': ['Wind Speed (mph)', 'mph', 'mdi:weather-windy-variant'],
-    'symbol': ['Symbol', None, None],
+    'symbol': ['Symbol', None, 'mdi:triangle-outline'],
     'daily_rain': ['Daily Rain', 'mm', 'mdi:weather-rainy'],
     'rain_rate': ['Rain Rate', 'mm', 'mdi:weather-rainy'],
     'pressure': ['Pressure', 'hPa', 'mdi:trending-up'],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'cloud_height_m': ['Cloud Height (m)', 'm', 'mdi:cloud-outline'],
-    'cloud_height_ft': ['Cloud Height (ft)', 'ft', 'mdi:cloud-outline']
+    'cloud_height_ft': ['Cloud Height (ft)', 'ft', 'mdi:cloud-outline'],
+    'forecast': ['Forecast', None, "mdi:card-text-outline"]
 }
 
 CONF_URL = 'url'
@@ -71,8 +72,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         dev.append(ClientrawSensor(sensor_type, name))
     async_add_entities(dev)
 
-    weather = ClientrawData(hass, url, dev)
-    async_track_utc_time_change(hass, weather.async_update,
+    weather = ClientrawData(hass, url, interval, dev)
+    # Update weather per interval
+    async_track_utc_time_change(hass, weather.fetch_data,
                                 minute=interval, second=0)
     await weather.fetch_data()
 
@@ -125,12 +127,13 @@ class ClientrawSensor(Entity):
 class ClientrawData(object):
     """Get the latest data and updates the states."""
 
-    def __init__(self, hass, url, devices):
+    def __init__(self, hass, url, interval, devices):
         """Initialize the data object."""
         self._url = url
         self.devices = devices
         self.data = {}
         self.hass = hass
+        self._interval = interval
 
     async def fetch_data(self, *_):
         """Get the latest data"""
@@ -162,7 +165,7 @@ class ClientrawData(object):
             return
 
         await self.async_update()
-        async_call_later(self.hass, 60 * 60, self.fetch_data)
+        async_call_later(self.hass, self._interval * 60, self.fetch_data)
 
     async def async_update(self, *_):
         """Find the current data from self.data."""
@@ -236,6 +239,20 @@ class ClientrawData(object):
 
             elif dev.type == 'humidex':
                 new_state = float(self.data[44])
+
+            elif dev.type == 'forecast':
+                val = int(self.data[15])
+                arr = ["sunny", "clearnight", "cloudy", "cloudy2",
+                       "night cloudy", "dry", "fog", "haze", "heavyrain",
+                       "mainlyfine", "mist", "night fog", "night heavyrain",
+                       "night overcast", "night rain", "night showers",
+                       "night snow", "night", "thunder", "overcast",
+                       "partlycloudy", "rain", "rain2", "showers2", "sleet",
+                       "sleetshowers", "snow", "snowmelt", "snowshowers2",
+                       "sunny", "thundershowers", "thundershowers2",
+                       "thunderstorms", "tornado", "windy", "stopped",
+                       "rainning", "wind + rain"]
+                new_state = arr[(val)] if val < len(arr) else "unknown"
 
             _LOGGER.debug("%s %s", dev.type, new_state)
 
