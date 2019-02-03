@@ -10,11 +10,11 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_ATTRIBUTION)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, ATTR_ATTRIBUTION)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_time_interval)
+from homeassistant.helpers.event import (async_track_utc_time_change,
+                                         async_call_later)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,23 +23,23 @@ CONF_ATTRIBUTION = "Weather forecast delivered by your WD Clientraw enabled " \
     "weather station."
 
 SENSOR_TYPES = {
-    'dewpoint': ['Dewpoint (°C)', TEMP_CELSIUS],
-    'heat_index': ['Heat index (°C)', TEMP_CELSIUS],
-    'temp': ['Temperature (°C)', TEMP_CELSIUS],
-    'humidex': ['Humidex (°C)', TEMP_CELSIUS],
-    'wind_degrees': ['Wind Degrees', '°'],
-    'wind_dir': ['Wind Direction', None],
-    'wind_gust_kph': ['Wind Gust (km/h)', 'km/h'],
-    'wind_gust_mph': ['Wind Gust (mph)', 'mph'],
-    'wind_kph': ['Wind Speed (km/h)', 'km/h'],
-    'wind_mph': ['Wind Speed (mph)', 'mph'],
-    'symbol': ['Symbol', None],
-    'daily_rain': ['Daily Rain', 'mm'],
-    'rain_rate': ['Rain Rate', 'mm'],
-    'pressure': ['Pressure', 'hPa'],
-    'humidity': ['Humidity', '%'],
-    'cloud_height_m': ['Cloud Height (m)', 'm'],
-    'cloud_height_ft': ['Cloud Height (ft)', 'ft']
+    'dewpoint': ['Dewpoint (°C)', TEMP_CELSIUS, 'mdi:weather-fog'],
+    'heat_index': ['Heat index (°C)', TEMP_CELSIUS, 'mdi:thermometer'],
+    'temp': ['Temperature (°C)', TEMP_CELSIUS, 'mdi:thermometer'],
+    'humidex': ['Humidex (°C)', TEMP_CELSIUS, 'mdi:thermometer'],
+    'wind_degrees': ['Wind Degrees', '°', 'mdi:subdirectory-arrow-right'],
+    'wind_dir': ['Wind Direction', None, 'mdi:subdirectory-arrow-right'],
+    'wind_gust_kph': ['Wind Gust (km/h)', 'km/h', 'mdi:weather-windy'],
+    'wind_gust_mph': ['Wind Gust (mph)', 'mph', 'mdi:weather-windy'],
+    'wind_kph': ['Wind Speed (km/h)', 'km/h', 'mdi:weather-windy-variant'],
+    'wind_mph': ['Wind Speed (mph)', 'mph', 'mdi:weather-windy-variant'],
+    'symbol': ['Symbol', None, None],
+    'daily_rain': ['Daily Rain', 'mm', 'mdi:weather-rainy'],
+    'rain_rate': ['Rain Rate', 'mm', 'mdi:weather-rainy'],
+    'pressure': ['Pressure', 'hPa', 'mdi:trending-up'],
+    'humidity': ['Humidity', '%', 'mdi:water-percent'],
+    'cloud_height_m': ['Cloud Height (m)', 'm', 'mdi:cloud-outline'],
+    'cloud_height_ft': ['Cloud Height (ft)', 'ft', 'mdi:cloud-outline']
 }
 
 CONF_URL = 'url'
@@ -57,26 +57,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the sensor platform."""
-
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Set up the Clientraw sensor."""
     url = config.get(CONF_URL)
     interval = config.get(CONF_INTERVAL)
     name = config.get(CONF_NAME)
-    
+
     _LOGGER.debug("Clientraw setup interval %s", interval)
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(ClientrawSensor(sensor_type, name))
-    async_add_devices(dev)
+    async_add_entities(dev)
 
     weather = ClientrawData(hass, url, dev)
-    # Update weather per interval
-    async_track_time_interval(hass, weather.async_update,
-                              timedelta(minutes=interval, seconds=0))
-    yield from weather.async_update()
+    async_track_utc_time_change(hass, weather.async_update,
+                                minute=interval, second=0)
+    await weather.fetch_data()
 
 
 class ClientrawSensor(Entity):
@@ -85,10 +83,11 @@ class ClientrawSensor(Entity):
     def __init__(self, sensor_type, name):
         """Initialize the sensor."""
         self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
+        self._name = SENSOR_TYPES[sensor_type][0]
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._icon = SENSOR_TYPES[self.type][2]
 
     @property
     def name(self):
@@ -117,6 +116,11 @@ class ClientrawSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def icon(self):
+        """Return the icon of this entity, if any."""
+        return self._icon
+
 
 class ClientrawData(object):
     """Get the latest data and updates the states."""
@@ -128,34 +132,25 @@ class ClientrawData(object):
         self.data = {}
         self.hass = hass
 
-    @asyncio.coroutine
-    def async_update(self, *_):
+    async def fetch_data(self, *_):
         """Get the latest data"""
-        def try_again(err: str):
-            """Retry in 5 minutes."""
-            _LOGGER.warning('Fetching url failed, retrying in 5 min: %s', err)
-            nxt = dt_util.utcnow() + timedelta(minutes=5)
-            if nxt.minute >= 5:
-                async_track_point_in_utc_time(
-                    self.hass, self.async_update, nxt)
 
-        resp = None
+        def try_again(err: str):
+            """Retry"""
+            _LOGGER.error("Will try again shortly: %s", err)
+            async_call_later(self.hass, 2 * 60, self.fetch_data)
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10, loop=self.hass.loop):
-                resp = yield from websession.get(self._url)
+                resp = await websession.get(self._url)
             if resp.status != 200:
                 try_again('{} returned {}'.format(resp.url, resp.status))
                 return
-            text = yield from resp.text()
+            text = await resp.text()
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             try_again(err)
             return
-
-        # finally:
-        #     if resp is not None:
-        #         self.hass.async_add_job(resp.release())
 
         try:
             self.data = text.split(' ')
@@ -166,11 +161,17 @@ class ClientrawData(object):
             try_again(err)
             return
 
-        tasks = []
+        await self.async_update()
+        async_call_later(self.hass, 60 * 60, self.fetch_data)
 
-        _LOGGER.info("Updating states...")
+    async def async_update(self, *_):
+        """Find the current data from self.data."""
+        if not self.data:
+            return
 
         # Update all devices
+        tasks = []
+
         for dev in self.devices:
             new_state = None
 
@@ -244,4 +245,4 @@ class ClientrawData(object):
                 tasks.append(dev.async_update_ha_state())
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks, loop=self.hass.loop)
