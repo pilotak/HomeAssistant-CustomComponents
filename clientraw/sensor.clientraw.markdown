@@ -16,26 +16,21 @@ Configuration variables:
 
 - **url**: full path to clientraw.txt file
 - **interval**: poll interval in minutes (1-59), 15 min is default
-- **name**: optional string with the name of the station (if not set --> 'clientraw')
 - **monitored_conditions** array: Conditions to display in the frontend.
-  - **dewpoint**: Dewpoint (°C)
-  - **heat_index**: Heat index (°C)
-  - **temp**: Temperature (°C)
-  - **humidex**: Humidex (°C)
+  - **dewpoint**: Dewpoint (°C or °F)
+  - **heat_index**: Heat index (°C or °F)
+  - **temp**: Temperature (°C or °F)
+  - **humidex**: Humidex (°C or °F)
   - **wind_degrees**: Where the wind is coming from in degrees, with true north at 0° and progressing clockwise.
   - **wind_dir**: Wind Direction as string ie.: N, NW, etc.
-  - **wind_gust_kph**: Wind Gust (km/h)
-  - **wind_gust_mph**: Wind Gust (mph)
-  - **wind_kph**: Wind Speed (km/h)
-  - **wind_mph**: Wind Speed (mph)
+  - **wind_gust**: Wind Gust (km/h or mph)
+  - **wind_speed**: Wind Speed (km/h or mph)
   - **symbol**: Symbol
-  - **daily_rain**: Daily Rain (mm)
-  - **rain_rate**: Rain Rate (mm)
-  - **pressure**: Pressure (hPa)
-  - **humidity**: Relative humidity
-  - **cloud_height_m**: Cloud Height (m)
-  - **cloud_height_ft**: Cloud Height (ft)
-  - **forecast**: Text based
+  - **daily_rain**: Daily Rain (mm or in)
+  - **pressure**: Pressure (hPa or inHg)
+  - **humidity**: Relative humidity (%)
+  - **cloud_height**: Cloud Height (m or ft)
+  - **forecast**: string based output ie.: night showers
 
 A full configuration example can be found below:
 
@@ -45,7 +40,6 @@ sensor:
   - platform: clientraw
     url: "http://example.com/clientraw.txt"
     interval: 10
-    name: 'station1'
     monitored_conditions:
       - dewpoint
       - heat_index
@@ -53,17 +47,13 @@ sensor:
       - humidex
       - wind_degrees
       - wind_dir
-      - wind_gust_kph
-      - wind_gust_mph
-      - wind_kph
-      - wind_mph
+      - wind_gust
+      - wind_speed
       - symbol
-      - daily_rain
       - rain_rate
       - pressure
       - humidity
-      - cloud_height_m
-      - cloud_height_ft
+      - cloud_height
       - forecast
 ```
 Symbol codes:

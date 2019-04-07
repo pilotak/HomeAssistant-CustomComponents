@@ -94,7 +94,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             _LOGGER.debug("Applying battery icon template")
 
             new_icon = ("{{% if states('{0}') != '{2}' %}}\
-                {{% set batt = states.{0}.attributes['{1}'] %}}\
+                {{% set batt = states.{0}.attributes['{1}']|int %}}\
                 {{% if batt == 'unknown' %}}\
                 mdi:battery-unknown\
                 {{% elif batt > 95 %}}\

@@ -13,7 +13,7 @@ ha_iot_class: "Local Push"
 logo: home-assistant.png
 ---
 
-Allows the creation of a sensor that breaks out attribute of defined entities.
+The `attribute` platform supports sensors which break out specified `attribute` from other entities.
 
 To enable Attribute sensor in your installation, add the following to your `configuration.yaml` file:
 
@@ -77,7 +77,7 @@ sensor:
 If **`attribute`** is `battery` or `battety_level` and you don't specify **`icon`** following icon_template is applied. The result is that battery icon become as full as battery based on percentage.
 
 ```yaml
-{% if batt != 'unknown' %}
+{% if batt == 'unknown' %}
     {% if batt > 95 %}
         mdi:battery
     {% elif batt > 85 %}
@@ -122,6 +122,6 @@ sensor:
       - automation.dummy_changed
 ```
 <p class='note'>
-If **`attribute`** is `last_changed` or `last_triggered` and you specify **`time_format`**, extracted string ie.: _**2017-08-08T13:14:21.651894+00:00**_ gets translated into specified strftime format with timezone applied. Result would be ie.: _**8 August 15:14:21**_ if you timezone is UTC+2
+If **`attribute`** is `last_changed` or `last_triggered` and you specify **`time_format`**, extracted string ie.: ***2017-08-08T13:14:21.651894+00:00*** gets translated into specified strftime format with timezone applied. Result would be ie.: ***8 August 15:14:21*** if you timezone is UTC+2
 </p>
 

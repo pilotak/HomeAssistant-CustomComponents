@@ -10,12 +10,17 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, ATTR_ATTRIBUTION)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, TEMP_FAHRENHEIT, PRESSURE_HPA,
+    PRESSURE_INHG, LENGTH_METERS, LENGTH_FEET, LENGTH_INCHES, ATTR_ATTRIBUTION)
+from homeassistant.util import dt as dt_util
+from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.distance import convert as convert_distance
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (async_track_utc_time_change,
                                          async_call_later)
-from homeassistant.util import dt as dt_util
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,24 +28,23 @@ CONF_ATTRIBUTION = "Weather forecast delivered by your WD Clientraw enabled " \
     "weather station."
 
 SENSOR_TYPES = {
-    'dewpoint': ['Dewpoint (°C)', TEMP_CELSIUS, 'mdi:weather-fog'],
-    'heat_index': ['Heat index (°C)', TEMP_CELSIUS, 'mdi:thermometer'],
-    'temp': ['Temperature (°C)', TEMP_CELSIUS, 'mdi:thermometer'],
-    'humidex': ['Humidex (°C)', TEMP_CELSIUS, 'mdi:thermometer'],
-    'wind_degrees': ['Wind Degrees', '°', 'mdi:subdirectory-arrow-right'],
-    'wind_dir': ['Wind Direction', None, 'mdi:subdirectory-arrow-right'],
-    'wind_gust_kph': ['Wind Gust (km/h)', 'km/h', 'mdi:weather-windy'],
-    'wind_gust_mph': ['Wind Gust (mph)', 'mph', 'mdi:weather-windy'],
-    'wind_kph': ['Wind Speed (km/h)', 'km/h', 'mdi:weather-windy-variant'],
-    'wind_mph': ['Wind Speed (mph)', 'mph', 'mdi:weather-windy-variant'],
-    'symbol': ['Symbol', None, 'mdi:triangle-outline'],
-    'daily_rain': ['Daily Rain', 'mm', 'mdi:weather-rainy'],
-    'rain_rate': ['Rain Rate', 'mm', 'mdi:weather-rainy'],
-    'pressure': ['Pressure', 'hPa', 'mdi:trending-up'],
-    'humidity': ['Humidity', '%', 'mdi:water-percent'],
-    'cloud_height_m': ['Cloud Height (m)', 'm', 'mdi:cloud-outline'],
-    'cloud_height_ft': ['Cloud Height (ft)', 'ft', 'mdi:cloud-outline'],
-    'forecast': ['Forecast', None, "mdi:card-text-outline"]
+    'dewpoint': ['Dewpoint', TEMP_CELSIUS, TEMP_FAHRENHEIT, 'mdi:weather-fog'],
+    'heat_index': ['Heat index', TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                   'mdi:thermometer'],
+    'temp': ['Temperature', TEMP_CELSIUS, TEMP_FAHRENHEIT, 'mdi:thermometer'],
+    'humidex': ['Humidex', TEMP_CELSIUS, TEMP_FAHRENHEIT, 'mdi:thermometer'],
+    'wind_degrees': ['Wind Degrees', '°', '°', 'mdi:subdirectory-arrow-right'],
+    'wind_dir': ['Wind Direction', None, None, 'mdi:subdirectory-arrow-right'],
+    'wind_gust': ['Wind Gust', 'km/h', 'mph', 'mdi:weather-windy'],
+    'wind_speed': ['Wind Speed', 'km/h', 'mph', 'mdi:weather-windy-variant'],
+    'symbol': ['Symbol', None, None, 'mdi:triangle-outline'],
+    'daily_rain': ['Daily Rain', 'mm', LENGTH_INCHES, 'mdi:weather-rainy'],
+    'rain_rate': ['Rain Rate', 'mm', LENGTH_INCHES, 'mdi:weather-rainy'],
+    'pressure': ['Pressure', PRESSURE_HPA, PRESSURE_INHG, 'mdi:trending-up'],
+    'humidity': ['Humidity', '%', '%', 'mdi:water-percent'],
+    'cloud_height': ['Cloud Height', LENGTH_METERS, LENGTH_FEET,
+                     'mdi:cloud-outline'],
+    'forecast': ['Forecast', None, None, "mdi:card-text-outline"]
 }
 
 CONF_URL = 'url'
@@ -69,7 +73,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(ClientrawSensor(sensor_type, name))
+        dev.append(ClientrawSensor(
+            hass.config.units.is_metric, sensor_type, name))
     async_add_entities(dev)
 
     weather = ClientrawData(hass, url, interval, dev)
@@ -82,14 +87,16 @@ async def async_setup_platform(hass, config, async_add_entities,
 class ClientrawSensor(Entity):
     """Representation of an clientraw sensor."""
 
-    def __init__(self, sensor_type, name):
+    def __init__(self, is_metric, sensor_type, name):
         """Initialize the sensor."""
         self.client_name = name
         self.type = sensor_type
         self._name = SENSOR_TYPES[sensor_type][0]
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._icon = SENSOR_TYPES[self.type][2]
+        self._metric_unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._imperial_unit_of_measurement = SENSOR_TYPES[self.type][2]
+        self._icon = SENSOR_TYPES[self.type][3]
+        self._is_metric = is_metric
 
     @property
     def name(self):
@@ -116,7 +123,11 @@ class ClientrawSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+
+        if self._is_metric:
+            return self._metric_unit_of_measurement
+        else:
+            return self._imperial_unit_of_measurement
 
     @property
     def icon(self):
@@ -177,34 +188,58 @@ class ClientrawData(object):
                 new_state = int(self.data[48])
 
             elif dev.type == 'daily_rain':
-                new_state = float(self.data[7])
+                rain = float(self.data[7])
+
+                if not self.hass.config.units.is_metric:
+                    rain = rain * 0.0393700787
+
+                new_state = round(rain, 2)
 
             elif dev.type == 'rain_rate':
-                new_state = float(self.data[10])
+                rate = float(self.data[10])
+
+                if not self.hass.config.units.is_metric:
+                    rate = rate * 0.0393700787
+
+                new_state = round(rate, 2)
 
             elif dev.type == 'temp':
-                new_state = float(self.data[4])
+                temperature = float(self.data[4])
 
-            elif dev.type == 'wind_kph':
-                knots = float(self.data[1])
-                new_state = round(knots * 1.85166, 2)
+                if not self.hass.config.units.is_metric:
+                    temperature = convert_temperature(
+                        temperature, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
-            elif dev.type == 'wind_mph':
-                knots = float(self.data[1])
-                kmh = (knots * 1.85166)
-                new_state = round(0.6214 * kmh, 2)
+                new_state = round(temperature, 2)
 
-            elif dev.type == 'wind_gust_kph':
-                knots = float(self.data[2])
-                new_state = round(knots * 1.85166, 2)
+            elif dev.type == 'wind_speed':
+                speed = float(self.data[1])
 
-            elif dev.type == 'wind_gust_mph':
-                knots = float(self.data[2])
-                kmh = (knots * 1.85166)
-                new_state = round(0.6214 * kmh, 2)
+                if self.hass.config.units.is_metric:
+                    new_state = speed * 1.85166
+                else:
+                    new_state = speed * 1.1507794
+
+                new_state = round(speed, 2)
+
+            elif dev.type == 'wind_gust':
+                gust = float(self.data[2])
+
+                if self.hass.config.units.is_metric:
+                    new_state = gust * 1.85166
+                else:
+                    new_state = gust * 1.1507794
+
+                new_state = round(gust, 2)
 
             elif dev.type == 'pressure':
-                new_state = float(self.data[6])
+                pressure = float(self.data[6])
+
+                if not self.hass.config.units.is_metric:
+                    pressure = round(convert_pressure(
+                        pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
+
+                new_state = round(pressure, 2)
 
             elif dev.type == 'wind_degrees':
                 new_state = float(self.data[3])
@@ -219,21 +254,41 @@ class ClientrawData(object):
             elif dev.type == 'humidity':
                 new_state = float(self.data[5])
 
-            elif dev.type == 'cloud_height_m':
-                new_state = float(self.data[73])
+            elif dev.type == 'cloud_height':
+                height = float(self.data[73])
 
-            elif dev.type == 'cloud_height_ft':
-                meters = float(self.data[73])
-                new_state = round(meters / 0.3048, 2)
+                if not self.hass.config.units.is_metric:
+                    height = convert_distance(
+                        height, LENGTH_METERS, LENGTH_FEET)
+
+                new_state = round(height, 2)
 
             elif dev.type == 'dewpoint':
-                new_state = float(self.data[72])
+                temperature = float(self.data[72])
+
+                if not self.hass.config.units.is_metric:
+                    temperature = convert_temperature(
+                        temperature, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+
+                new_state = round(temperature, 2)
 
             elif dev.type == 'heat_index':
-                new_state = float(self.data[112])
+                temperature = float(self.data[112])
+
+                if not self.hass.config.units.is_metric:
+                    temperature = convert_temperature(
+                        temperature, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+
+                new_state = round(temperature, 2)
 
             elif dev.type == 'humidex':
-                new_state = float(self.data[44])
+                temperature = float(self.data[44])
+
+                if not self.hass.config.units.is_metric:
+                    temperature = convert_temperature(
+                        temperature, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+
+                new_state = round(temperature, 2)
 
             elif dev.type == 'forecast':
                 val = int(self.data[15])
