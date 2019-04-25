@@ -9,5 +9,28 @@
     "resources": [
       "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/clientraw/manifest.json"
     ]
+  },
+  "attributes": {
+    "updated_at": "2019-04-25",
+    "version": "1.0.0",
+    "local_location": "/custom_components/attributes/sensor.py",
+    "remote_location": "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/attributes/sensor.py",
+    "visit_repo": "https://github.com/pilotak/HomeAssistant-CustomComponents",
+    "changelog": "",
+    "resources": [
+      "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/attributes/manifest.json"
+    ]
+  },
+  "mikrotik": {
+    "updated_at": "2019-04-25",
+    "version": "1.0.0",
+    "local_location": "/custom_components/mikrotik/__init__.py",
+    "remote_location": "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/mikrotik/__init__.py",
+    "visit_repo": "https://github.com/pilotak/HomeAssistant-CustomComponents",
+    "changelog": "",
+    "resources": [
+      "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/mikrotik/manifest.json",
+      "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/mikrotik/services.yaml"
+    ]
   }
 }
