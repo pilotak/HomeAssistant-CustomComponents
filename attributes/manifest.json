@@ -1,0 +1,10 @@
+{
+  "domain": "attributes",
+  "name": "Attributes",
+  "documentation": "https://github.com/pilotak/HomeAssistant-CustomComponents/blob/master/attributes/sensor.attributes.markdown",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+  	"https://github.com/pilotak/"
+  ]
+}
