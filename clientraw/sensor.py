@@ -21,6 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (async_track_utc_time_change,
                                          async_call_later)
 
+__version__ = '1.0.0'
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,6 +9,8 @@ from homeassistant.const import (
 
 import librouteros
 
+__version__ = '1.0.0'
+
 REQUIREMENTS = ['librouteros==1.0.4']
 
 DOMAIN = "mikrotik"

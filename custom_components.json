@@ -1,0 +1,13 @@
+{
+  "clientraw": {
+    "updated_at": "2019-04-25",
+    "version": "1.0.0",
+    "local_location": "/custom_components/custom_components/clientraw/sensor.py",
+    "remote_location": "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/clientraw/sensor.py",
+    "visit_repo": "https://github.com/pilotak/HomeAssistant-CustomComponents",
+    "changelog": "",
+    "resources": [
+      "https://raw.githubusercontent.com/pilotak/HomeAssistant-CustomComponents/master/clientraw/manifest.json"
+    ]
+  }
+}
